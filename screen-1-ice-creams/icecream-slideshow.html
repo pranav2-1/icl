@@ -1,0 +1,581 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Ice Cream Labs — Do Your Own Experiment</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,900;1,700&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --blue:#0072FF;
+      --cyan:#00C6FF;
+      --indigo:#4361EE;
+      --teal:#4ECDC4;
+      --ice:#7DDFFF;
+      --dark:#050d1a;
+      --card-bg:rgba(255,255,255,.07);
+      --card-border:rgba(255,255,255,.13);
+      --text:#E8F4FF;
+      --muted:rgba(200,230,255,.55);
+      --radius:24px;
+      --radius-lg:32px;
+    }
+    *,*::before,*::after{box-sizing:border-box;}
+    html,body{height:100%;margin:0;overflow:hidden;}
+    body{font-family:Inter,system-ui,sans-serif;background:#000;}
+
+    /* ── VIEWPORT & TV CANVAS ── */
+    .viewport{width:100vw;height:100vh;overflow:hidden;position:relative;}
+    .tv{
+      width:1920px;height:1080px;
+      transform-origin:top left;
+      position:absolute;
+      overflow:hidden;
+      background:var(--dark);
+      display:flex;flex-direction:column;
+    }
+
+    /* ── BG ORBS ── */
+    .bg-orbs{position:absolute;inset:0;pointer-events:none;z-index:0;}
+    .orb{position:absolute;border-radius:50%;filter:blur(130px);}
+    .orb1{width:900px;height:900px;opacity:.32;background:radial-gradient(circle,#0072FF,transparent 70%);top:-260px;left:-200px;animation:o1 20s ease-in-out infinite alternate;}
+    .orb2{width:750px;height:750px;opacity:.28;background:radial-gradient(circle,#4361EE,transparent 70%);bottom:-220px;right:-140px;animation:o2 26s ease-in-out infinite alternate;}
+    .orb3{width:550px;height:550px;opacity:.22;background:radial-gradient(circle,#00C6FF,transparent 70%);top:380px;right:700px;animation:o3 18s ease-in-out infinite alternate;}
+    @keyframes o1{from{transform:translate(0,0)scale(1);}to{transform:translate(90px,70px)scale(1.12);}}
+    @keyframes o2{from{transform:translate(0,0)scale(1);}to{transform:translate(-70px,-90px)scale(1.18);}}
+    @keyframes o3{from{transform:translate(0,0)scale(1);}to{transform:translate(50px,-50px)scale(.88);}}
+
+    /* ── PARTICLES ── */
+    .particles{position:absolute;inset:0;pointer-events:none;z-index:0;overflow:hidden;}
+    .p{position:absolute;bottom:-20px;border-radius:50%;opacity:0;animation:floatUp linear infinite;}
+    @keyframes floatUp{
+      0%  {transform:translateY(0)scale(1);opacity:0;}
+      10% {opacity:.55;}
+      90% {opacity:.18;}
+      100%{transform:translateY(-1200px)scale(.3);opacity:0;}
+    }
+
+    /* ── HEADER ── */
+    .hdr{
+      position:relative;z-index:10;flex-shrink:0;
+      display:flex;align-items:center;
+      padding:16px 64px 12px;
+      gap:40px;
+    }
+    .logo-img{height:88px;width:auto;object-fit:contain;flex-shrink:0;}
+    .hdr-center{
+      flex:1;
+      display:flex;flex-direction:column;align-items:center;gap:2px;
+    }
+    .tagline-top{
+      font-family:Inter,sans-serif;
+      font-size:13px;font-weight:800;letter-spacing:4px;text-transform:uppercase;
+      color:rgba(200,230,255,.45);
+    }
+    .tagline-main{
+      font-family:"Playfair Display",Georgia,serif;
+      font-size:38px;font-weight:700;font-style:italic;
+      background:linear-gradient(90deg,var(--cyan),#fff 50%,var(--blue));
+      -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+      line-height:1;
+    }
+    .step-dots{display:flex;align-items:center;gap:10px;flex-shrink:0;}
+    .sdot{
+      height:10px;border-radius:999px;
+      background:rgba(255,255,255,.18);border:2px solid rgba(255,255,255,.25);
+      width:10px;
+      transition:all .5s cubic-bezier(.4,0,.2,1);
+    }
+    .sdot.active{
+      background:linear-gradient(135deg,var(--cyan),var(--blue));
+      border-color:var(--cyan);
+      width:36px;
+      box-shadow:0 0 14px rgba(0,198,255,.7);
+    }
+
+    /* ── DIVIDER ── */
+    .hdr-divider{height:1px;flex-shrink:0;position:relative;z-index:10;background:linear-gradient(90deg,transparent,rgba(255,255,255,.14),transparent);}
+
+    /* ── SLIDES WRAPPER ── */
+    .slides-wrapper{flex:1;position:relative;overflow:hidden;z-index:5;}
+    .slide{
+      position:absolute;inset:0;
+      padding:28px 64px 18px;
+      display:flex;flex-direction:column;
+      opacity:0;transform:translateX(100%);
+      transition:opacity .55s ease,transform .55s cubic-bezier(.4,0,.2,1);
+      pointer-events:none;
+    }
+    .slide.active{opacity:1;transform:translateX(0);pointer-events:auto;}
+    .slide.exit{opacity:0;transform:translateX(-100%);}
+
+    /* ── SLIDE HEADER ── */
+    .slide-hd{display:flex;align-items:center;gap:22px;margin-bottom:26px;flex-shrink:0;}
+    .step-pill{
+      background:linear-gradient(135deg,var(--cyan),var(--blue));
+      color:#fff;font-size:15px;font-weight:900;
+      padding:9px 24px;border-radius:999px;letter-spacing:2px;text-transform:uppercase;
+      box-shadow:0 0 32px rgba(0,198,255,.55);flex-shrink:0;
+    }
+    .slide-title{
+      font-family:"Playfair Display",Georgia,serif;
+      font-size:54px;font-weight:700;color:var(--text);line-height:1;
+    }
+    .slide-sub{
+      margin-left:auto;font-size:17px;font-weight:600;
+      color:var(--muted);letter-spacing:.5px;white-space:nowrap;
+    }
+
+    /* ── BIG CARDS (Scoops / Cones) ── */
+    .big-grid{
+      display:grid;grid-template-columns:repeat(3,1fr);
+      gap:30px;flex:1;align-items:stretch;
+      min-height:0;
+    }
+    .big-card{
+      background:var(--card-bg);
+      border:1px solid var(--card-border);
+      backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+      border-radius:var(--radius-lg);
+      overflow:hidden;
+      display:flex;flex-direction:column;
+    }
+    .big-card.featured{
+      border-color:rgba(0,198,255,.48);
+      animation:featuredPulse 3s ease-in-out infinite;
+    }
+    @keyframes featuredPulse{
+      0%,100%{box-shadow:0 0 40px rgba(0,198,255,.14),0 0 90px rgba(0,114,255,.06);}
+      50%    {box-shadow:0 0 70px rgba(0,198,255,.35),0 0 160px rgba(0,114,255,.14);}
+    }
+    /* Card entrance when slide becomes active */
+    .slide.active .big-card{animation:cardUp .55s ease both;}
+    .slide.active .big-card:nth-child(1){animation-delay:.06s;}
+    .slide.active .big-card:nth-child(2){animation-delay:.18s;}
+    .slide.active .big-card:nth-child(3){animation-delay:.30s;}
+    @keyframes cardUp{from{opacity:0;transform:translateY(36px);}to{opacity:1;transform:translateY(0);}}
+
+    .big-img{
+      flex:1;overflow:hidden;position:relative;
+      background:rgba(255,255,255,.04);
+      min-height:0;
+    }
+    .big-img img{
+      width:100%;height:100%;object-fit:contain;display:block;
+    }
+    .big-info{
+      padding:20px 26px 24px;
+      background:rgba(0,5,20,.45);
+      flex-shrink:0;position:relative;
+    }
+    .big-badge{
+      display:inline-block;
+      background:linear-gradient(135deg,rgba(0,198,255,.22),rgba(0,114,255,.18));
+      color:var(--cyan);border:1px solid rgba(0,198,255,.38);
+      padding:4px 14px;border-radius:999px;
+      font-size:13px;font-weight:900;letter-spacing:.5px;
+      margin-bottom:10px;
+      animation:badgePulse 2s ease-in-out infinite;
+    }
+    @keyframes badgePulse{0%,100%{opacity:1;}50%{opacity:.65;}}
+    .big-name{
+      font-family:"Playfair Display",Georgia,serif;
+      font-size:42px;font-weight:700;color:var(--text);line-height:1.05;
+    }
+    .big-sub{font-size:17px;font-weight:600;color:var(--muted);margin-top:5px;line-height:1.3;}
+    .big-price{
+      position:absolute;right:26px;top:20px;
+      font-weight:900;font-size:38px;
+      color:var(--ice);
+      text-shadow:0 0 26px rgba(125,223,255,.45);
+    }
+
+    /* ── TOPPINGS SLIDE ── */
+    .topping-layout{
+      display:grid;grid-template-columns:1.15fr .72fr;
+      gap:48px;flex:1;min-height:0;
+    }
+    .toppings-left{display:flex;flex-direction:column;gap:16px;min-height:0;overflow:hidden;}
+    .tsection{display:flex;flex-direction:column;gap:10px;flex:1;min-height:0;}
+    .tsection-hd{
+      font-family:"Playfair Display",Georgia,serif;
+      font-size:38px;font-weight:700;
+      background:linear-gradient(135deg,var(--cyan),var(--blue));
+      -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+      flex-shrink:0;line-height:1.1;
+    }
+    .tsection-hd.premium{
+      background:linear-gradient(135deg,var(--teal),var(--indigo));
+      -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+    }
+    .t-big-item{
+      flex:1;
+      display:flex;align-items:center;
+      background:var(--card-bg);
+      border:1px solid var(--card-border);
+      backdrop-filter:blur(18px);
+      border-radius:20px;
+      padding:0 24px;
+      gap:16px;
+      min-height:0;
+    }
+    /* Topping entrance */
+    .slide.active .t-big-item{animation:cardUp .5s ease both;}
+    .slide.active .tsection:nth-child(1) .t-big-item:nth-child(2){animation-delay:.06s;}
+    .slide.active .tsection:nth-child(1) .t-big-item:nth-child(3){animation-delay:.12s;}
+    .slide.active .tsection:nth-child(1) .t-big-item:nth-child(4){animation-delay:.18s;}
+    .slide.active .tsection:nth-child(2) .t-big-item:nth-child(2){animation-delay:.22s;}
+    .slide.active .tsection:nth-child(2) .t-big-item:nth-child(3){animation-delay:.28s;}
+    .slide.active .tsection:nth-child(2) .t-big-item:nth-child(4){animation-delay:.34s;}
+    .slide.active .tsection:nth-child(2) .t-big-item:nth-child(5){animation-delay:.40s;}
+    .t-dot-big{
+      width:12px;height:12px;border-radius:50%;flex-shrink:0;
+      background:linear-gradient(135deg,var(--cyan),var(--blue));
+    }
+    .tsection:nth-child(2) .t-dot-big{background:linear-gradient(135deg,var(--teal),var(--indigo));}
+    .t-big-name{font-size:24px;font-weight:800;color:var(--text);flex:1;}
+    .t-big-price{font-size:26px;font-weight:900;color:var(--ice);white-space:nowrap;text-shadow:0 0 18px rgba(125,223,255,.4);}
+
+    /* ── TOPPING HERO PANEL (right) ── */
+    .toppings-hero-panel{display:flex;flex-direction:column;gap:10px;min-height:0;}
+    .topping-hero-hd{flex-shrink:0;text-align:center;}
+    .topping-hero-hd .kicker{font-size:12px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:var(--muted);}
+    .topping-hero-hd .today-title{
+      font-family:"Playfair Display",Georgia,serif;
+      font-size:34px;font-weight:700;color:var(--text);line-height:1;margin-top:4px;
+    }
+    .toppings-hero-panel .heroWrap{flex:1;display:flex;justify-content:center;min-height:0;overflow:hidden;}
+    .heroCard{
+      width:100%;
+      border-radius:28px;overflow:hidden;position:relative;
+      background:rgba(0,0,0,.3);
+      border:1px solid rgba(255,255,255,.15);
+      box-shadow:0 0 60px rgba(0,114,255,.18),0 24px 60px rgba(0,0,0,.4);
+    }
+    .heroImg{
+      position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
+      opacity:0;transform:scale(1.08);
+      transition:opacity 1.2s ease-in-out,transform 8s ease-in-out;
+    }
+    .heroImg.isActive{opacity:1;transform:scale(1.0);}
+    .heroBadge{
+      position:absolute;left:14px;bottom:16px;
+      background:rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.2);
+      backdrop-filter:blur(12px);
+      padding:8px 16px;border-radius:999px;
+      font-weight:900;font-size:13px;color:var(--text);
+      white-space:nowrap;letter-spacing:1px;
+    }
+    .heroNote{text-align:center;color:var(--muted);font-weight:700;font-size:15px;letter-spacing:1px;flex-shrink:0;}
+
+    /* ── PROGRESS BAR ── */
+    .progress-bar{
+      position:absolute;bottom:0;left:0;height:3px;width:0%;
+      background:linear-gradient(90deg,var(--cyan),var(--blue));
+      box-shadow:0 0 10px rgba(0,198,255,.6);
+      border-radius:0 999px 999px 0;
+      transition:none;
+      z-index:20;
+    }
+
+    /* ── FOOTER MARQUEE ── */
+    .footer{
+      position:relative;z-index:10;flex-shrink:0;
+      padding-top:6px;overflow:hidden;
+    }
+    .footerLine{height:1px;margin-bottom:7px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.14),transparent);}
+    .marqueeTrack{display:flex;white-space:nowrap;animation:marquee 28s linear infinite;}
+    .marqueeContent{
+      display:inline-flex;align-items:center;gap:32px;padding-right:80px;
+      font-weight:800;font-size:17px;letter-spacing:.5px;
+      color:rgba(200,230,255,.45);
+    }
+    .marqueeContent .mdot{
+      width:5px;height:5px;border-radius:50%;display:inline-block;
+      background:linear-gradient(135deg,var(--cyan),var(--blue));
+      animation:dotPop 1.2s ease-in-out infinite alternate;
+    }
+    .marqueeContent .mgap{display:inline-block;width:180px;}
+    @keyframes dotPop{from{transform:scale(1);}to{transform:scale(1.8);}}
+    @keyframes marquee{from{transform:translateX(0);}to{transform:translateX(-50%);}}
+  </style>
+</head>
+<body>
+  <div class="viewport">
+    <div class="tv" id="tv">
+      <div class="bg-orbs">
+        <div class="orb orb1"></div>
+        <div class="orb orb2"></div>
+        <div class="orb orb3"></div>
+      </div>
+      <div class="particles" id="particles"></div>
+
+      <!-- HEADER -->
+      <header class="hdr">
+        <img src="images/logo.png" alt="Ice Cream Labs" class="logo-img">
+        <div class="hdr-center">
+          <div class="tagline-top">Ice Cream Labs Presents</div>
+          <div class="tagline-main">Do Your Own Experiment</div>
+        </div>
+        <div class="step-dots" id="stepDots">
+          <span class="sdot active"></span>
+          <span class="sdot"></span>
+          <span class="sdot"></span>
+        </div>
+      </header>
+      <div class="hdr-divider"></div>
+
+      <!-- SLIDES -->
+      <div class="slides-wrapper" id="slidesWrapper">
+        <div class="progress-bar" id="progressBar"></div>
+
+        <!-- SLIDE 1 : SCOOPS -->
+        <div class="slide active" id="slide0">
+          <div class="slide-hd">
+            <span class="step-pill">STEP 1</span>
+            <span class="slide-title">Choose Your Scoops</span>
+            <span class="slide-sub">Pick your perfect combination</span>
+          </div>
+          <div class="big-grid">
+            <div class="big-card">
+              <div class="big-img"><img src="images/strawberry.png" alt="Scoop 1"></div>
+              <div class="big-info">
+                <div class="big-name">Scoop 1</div>
+                <div class="big-sub">Strawberry</div>
+                <div class="big-price">$3.99</div>
+              </div>
+            </div>
+            <div class="big-card featured">
+              <div class="big-img"><img src="images/chocostraw.png" alt="Scoop 2"></div>
+              <div class="big-info">
+                <div class="big-badge">&#9733; Most Popular</div>
+                <div class="big-name">Scoop 2</div>
+                <div class="big-sub">Vanilla + Strawberry</div>
+                <div class="big-price">$6.49</div>
+              </div>
+            </div>
+            <div class="big-card">
+              <div class="big-img"><img src="images/chocostrawbrownie.png" alt="Scoop 3"></div>
+              <div class="big-info">
+                <div class="big-name">Scoop 3</div>
+                <div class="big-sub">Choco Chip + Strawberry + Brownie</div>
+                <div class="big-price">$8.49</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SLIDE 2 : CONES -->
+        <div class="slide" id="slide1">
+          <div class="slide-hd">
+            <span class="step-pill">STEP 2</span>
+            <span class="slide-title">Choose Your Cone</span>
+            <span class="slide-sub">Pick your cone style</span>
+          </div>
+          <div class="big-grid">
+            <div class="big-card">
+              <div class="big-img"><img src="images/plaincone.png" alt="Plain Cone"></div>
+              <div class="big-info">
+                <div class="big-name">Plain</div>
+                <div class="big-sub">Classic Waffle Cone</div>
+                <div class="big-price">+$0.00</div>
+              </div>
+            </div>
+            <div class="big-card">
+              <div class="big-img"><img src="images/chocolate-cone.png" alt="Chocolate Cone"></div>
+              <div class="big-info">
+                <div class="big-name">Chocolate</div>
+                <div class="big-sub">Chocolate Dipped Cone</div>
+                <div class="big-price">+$1.00</div>
+              </div>
+            </div>
+            <div class="big-card featured">
+              <div class="big-img"><img src="images/choco-sprinkles-cone.png" alt="Choco Sprinkles"></div>
+              <div class="big-info">
+                <div class="big-badge">&#10024; Fan Favourite</div>
+                <div class="big-name">Choco + Sprinkles</div>
+                <div class="big-sub">Dipped + Rainbow Sprinkles</div>
+                <div class="big-price">+$1.50</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SLIDE 3 : TOPPINGS -->
+        <div class="slide" id="slide2">
+          <div class="slide-hd">
+            <span class="step-pill">STEP 3</span>
+            <span class="slide-title">Add Your Toppings</span>
+            <span class="slide-sub">Mix and match for the perfect finish</span>
+          </div>
+          <div class="topping-layout">
+            <!-- LEFT: all toppings -->
+            <div class="toppings-left">
+              <div class="tsection">
+                <div class="tsection-hd">Crunch</div>
+                <div class="t-big-item">
+                  <span class="t-dot-big"></span><span class="t-big-name">Roasted Nuts</span><span class="t-big-price">+$0.50</span>
+                </div>
+                <div class="t-big-item">
+                  <span class="t-dot-big"></span><span class="t-big-name">Sprinkles</span><span class="t-big-price">+$0.50</span>
+                </div>
+                <div class="t-big-item">
+                  <span class="t-dot-big"></span><span class="t-big-name">Choco Chips</span><span class="t-big-price">+$0.50</span>
+                </div>
+              </div>
+              <div class="tsection">
+                <div class="tsection-hd premium">Premium</div>
+                <div class="t-big-item">
+                  <span class="t-dot-big"></span><span class="t-big-name">Brownie Bites</span><span class="t-big-price">+$0.75</span>
+                </div>
+                <div class="t-big-item">
+                  <span class="t-dot-big"></span><span class="t-big-name">Popping Bobba</span><span class="t-big-price">+$0.75</span>
+                </div>
+                <div class="t-big-item">
+                  <span class="t-dot-big"></span><span class="t-big-name">Oreo Crumble</span><span class="t-big-price">+$0.75</span>
+                </div>
+                <div class="t-big-item">
+                  <span class="t-dot-big"></span><span class="t-big-name">Lotus Biscoff</span><span class="t-big-price">+$0.75</span>
+                </div>
+              </div>
+            </div>
+            <!-- RIGHT: Today's Favorites photo panel -->
+            <div class="toppings-hero-panel">
+              <div class="topping-hero-hd">
+                <div class="kicker">&#10022; Real Ice Cream &#10022;</div>
+                <div class="today-title">Today's Favorites</div>
+              </div>
+              <div class="heroWrap">
+                <div class="heroCard" id="toppingHeroCard">
+                  <img class="heroImg isActive" src="images/featured.png" alt="Real Ice Cream 1">
+                  <img class="heroImg" src="images/featured2.png" alt="Real Ice Cream 2">
+                  <div class="heroBadge" id="toppingHeroBadge">&#10022; Signature</div>
+                </div>
+              </div>
+              <div class="heroNote">&#10022; Fresh &nbsp;&bull;&nbsp; Premium &nbsp;&bull;&nbsp; Made Daily &#10022;</div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /slides-wrapper -->
+
+      <!-- FOOTER -->
+      <div class="footer">
+        <div class="footerLine"></div>
+        <div class="marqueeTrack">
+          <div class="marqueeContent">
+            <span>Upgrade to Waffle Cup</span><span class="mdot"></span>
+            <span>Add Extra Topping</span><span class="mdot"></span>
+            <span>Ask for Seasonal Flavors</span><span class="mdot"></span>
+            <span>Try Our Soft Serve</span><span class="mdot"></span>
+            <span>Mix &amp; Match Flavors</span><span class="mgap"></span>
+            <span>Upgrade to Waffle Cup</span><span class="mdot"></span>
+            <span>Add Extra Topping</span><span class="mdot"></span>
+            <span>Ask for Seasonal Flavors</span><span class="mdot"></span>
+            <span>Try Our Soft Serve</span><span class="mdot"></span>
+            <span>Mix &amp; Match Flavors</span><span class="mgap"></span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    // ── Scale TV to screen ──
+    (function(){
+      var tv = document.getElementById("tv");
+      function fit(){
+        var scale = Math.min(window.innerWidth/1920, window.innerHeight/1080);
+        var ox = (window.innerWidth  - 1920*scale)/2;
+        var oy = (window.innerHeight - 1080*scale)/2;
+        tv.style.transform = "scale("+scale+")";
+        tv.style.left = Math.max(0,ox)+"px";
+        tv.style.top  = Math.max(0,oy)+"px";
+      }
+      window.addEventListener("resize",fit); fit();
+    })();
+
+    // ── Slideshow ──
+    (function(){
+      var slides    = Array.from(document.querySelectorAll(".slide"));
+      var dots      = Array.from(document.querySelectorAll(".sdot"));
+      var bar       = document.getElementById("progressBar");
+      var durations = [7000, 7000, 8000]; // ms per slide
+      var current   = 0;
+      var timer, barAnim;
+
+      function startProgress(dur){
+        if(bar){
+          bar.style.transition = "none";
+          bar.style.width = "0%";
+          // Force reflow
+          bar.getBoundingClientRect();
+          bar.style.transition = "width "+dur+"ms linear";
+          bar.style.width = "100%";
+        }
+      }
+
+      function goTo(next){
+        slides[current].classList.remove("active");
+        slides[current].classList.add("exit");
+        dots[current].classList.remove("active");
+
+        var prev = current;
+        setTimeout(function(){ slides[prev].classList.remove("exit"); }, 700);
+
+        current = next % slides.length;
+        slides[current].classList.add("active");
+        dots[current].classList.add("active");
+
+        clearTimeout(timer);
+        startProgress(durations[current]);
+        timer = setTimeout(function(){ goTo(current+1); }, durations[current]);
+      }
+
+      // Start first progress bar immediately
+      startProgress(durations[0]);
+      timer = setTimeout(function(){ goTo(1); }, durations[0]);
+    })();
+
+    // ── Toppings slide hero crossfade with Ken Burns ──
+    (function(){
+      var card  = document.getElementById("toppingHeroCard");
+      if(!card) return;
+      var imgs  = Array.from(card.querySelectorAll(".heroImg"));
+      var badge = document.getElementById("toppingHeroBadge");
+      var labels = ["\u2726 Signature","\u2726 Loaded"];
+      var i = 0;
+      setInterval(function(){
+        imgs[i].classList.remove("isActive");
+        i = (i+1)%imgs.length;
+        imgs[i].classList.add("isActive");
+        if(badge) badge.textContent = labels[i]||"\u2726 Favorite";
+      },6000);
+    })();
+
+    // ── Floating particles ──
+    (function(){
+      var c = document.getElementById("particles");
+      if(!c) return;
+      var cols = ["#00C6FF","#0072FF","#4361EE","#7DDFFF","#4ECDC4","#38BDF8"];
+      for(var i=0;i<30;i++){
+        var p = document.createElement("div");
+        p.className = "p";
+        var s = 3 + Math.random()*9;
+        p.style.cssText = [
+          "width:"+s+"px",
+          "height:"+s+"px",
+          "left:"+(Math.random()*1920)+"px",
+          "background:"+cols[Math.floor(Math.random()*cols.length)],
+          "animation-duration:"+(10+Math.random()*20)+"s",
+          "animation-delay:"+(Math.random()*15)+"s"
+        ].join(";");
+        c.appendChild(p);
+      }
+    })();
+  </script>
+</body>
+</html>
